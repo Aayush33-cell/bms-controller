@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta name="description" content="BMS Controller - Turn on/off your lithium battery BMS system via Bluetooth">
+  <meta name="theme-color" content="#0a0e1a">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>BMS Controller</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app">
+    <!-- Status Bar -->
+    <header class="status-bar">
+      <div class="status-indicator" id="bleStatus">
+        <span class="status-dot"></span>
+        <span class="status-text">Disconnected</span>
+      </div>
+      <div class="app-title">BMS Controller</div>
+      <button class="icon-btn" id="settingsBtn" aria-label="Settings">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="3"/>
+          <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+        </svg>
+      </button>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <!-- Battery Visual -->
+      <div class="battery-card">
+        <div class="battery-visual">
+          <div class="battery-icon">
+            <div class="battery-body">
+              <div class="battery-fill" id="batteryFill">
+                <div class="battery-shimmer"></div>
+              </div>
+              <div class="battery-percentage" id="batteryPercent">--%</div>
+            </div>
+            <div class="battery-tip"></div>
+          </div>
+        </div>
+        <div class="battery-stats">
+          <div class="stat">
+            <span class="stat-label">Voltage</span>
+            <span class="stat-value" id="voltageVal">-- V</span>
+          </div>
+          <div class="stat">
+            <span class="stat-label">Current</span>
+            <span class="stat-value" id="currentVal">-- A</span>
+          </div>
+          <div class="stat">
+            <span class="stat-label">Temp</span>
+            <span class="stat-value" id="tempVal">-- °C</span>
+          </div>
+          <div class="stat">
+            <span class="stat-label">Cells</span>
+            <span class="stat-value" id="cellsVal">--</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- BMS Power Toggle -->
+      <div class="control-section">
+        <h2 class="section-title">BMS Power</h2>
+        <div class="toggle-card" id="bmsToggleCard">
+          <div class="toggle-info">
+            <div class="toggle-label">BMS System</div>
+            <div class="toggle-status" id="bmsStatusText">OFF</div>
+          </div>
+          <label class="power-toggle" id="bmsPowerToggle">
+            <input type="checkbox" id="bmsToggle" disabled>
+            <span class="toggle-slider">
+              <span class="toggle-knob">
+                <svg class="power-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <path d="M12 2v8"/>
+                  <path d="M17.66 6.34A8 8 0 1 1 6.34 6.34"/>
+                </svg>
+              </span>
+            </span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Charge / Discharge Controls -->
+      <div class="control-section">
+        <h2 class="section-title">Output Control</h2>
+        <div class="control-row">
+          <div class="toggle-card small" id="chargeCard">
+            <div class="toggle-info">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+              </svg>
+              <div class="toggle-label">Charge</div>
+            </div>
+            <label class="mini-toggle">
+              <input type="checkbox" id="chargeToggle" disabled>
+              <span class="mini-slider"><span class="mini-knob"></span></span>
+            </label>
+          </div>
+          <div class="toggle-card small" id="dischargeCard">
+            <div class="toggle-info">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M18 20V10M12 20V4M6 20v-6"/>
+              </svg>
+              <div class="toggle-label">Discharge</div>
+            </div>
+            <label class="mini-toggle">
+              <input type="checkbox" id="dischargeToggle" disabled>
+              <span class="mini-slider"><span class="mini-knob"></span></span>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <!-- Connect Button -->
+      <div class="connect-section">
+        <button class="connect-btn" id="connectBtn">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M6.5 6.5l11 11M17.5 6.5L12 12M12 12l-5.5 5.5M12 2v4M12 18v4"/>
+          </svg>
+          <span>Connect BMS</span>
+        </button>
+        <button class="disconnect-btn hidden" id="disconnectBtn">
+          <span>Disconnect</span>
+        </button>
+      </div>
+
+      <!-- Log Section -->
+      <div class="log-section">
+        <h2 class="section-title">Activity Log</h2>
+        <div class="log-container" id="logContainer">
+          <div class="log-entry info">App started. Tap "Connect BMS" to begin.</div>
+        </div>
+      </div>
+    </main>
+
+    <!-- Settings Modal -->
+    <div class="modal-overlay hidden" id="settingsModal">
+      <div class="modal">
+        <div class="modal-header">
+          <h2>Settings</h2>
+          <button class="icon-btn" id="closeSettings" aria-label="Close">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M18 6L6 18M6 6l12 12"/>
+            </svg>
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="setting-group">
+            <label class="setting-label">BMS Protocol</label>
+            <select class="setting-select" id="protocolSelect">
+              <option value="jbd">JBD / Xiaoxiang</option>
+              <option value="daly">Daly BMS</option>
+              <option value="ant">ANT BMS</option>
+              <option value="custom">Custom UUID</option>
+            </select>
+          </div>
+          <div class="setting-group hidden" id="customUuidGroup">
+            <label class="setting-label">Service UUID</label>
+            <input type="text" class="setting-input" id="customServiceUuid" placeholder="0000ff00-0000-1000-8000-00805f9b34fb">
+            <label class="setting-label">Write UUID</label>
+            <input type="text" class="setting-input" id="customWriteUuid" placeholder="0000ff02-0000-1000-8000-00805f9b34fb">
+            <label class="setting-label">Notify UUID</label>
+            <input type="text" class="setting-input" id="customNotifyUuid" placeholder="0000ff01-0000-1000-8000-00805f9b34fb">
+          </div>
+          <div class="setting-group">
+            <label class="setting-label">Auto-reconnect</label>
+            <label class="mini-toggle">
+              <input type="checkbox" id="autoReconnect" checked>
+              <span class="mini-slider"><span class="mini-knob"></span></span>
+            </label>
+          </div>
+          <div class="setting-group">
+            <label class="setting-label">Poll Interval (seconds)</label>
+            <input type="number" class="setting-input" id="pollInterval" value="2" min="1" max="30">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast hidden" id="toast">
+      <span class="toast-text" id="toastText"></span>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
