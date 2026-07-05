@@ -1,5 +1,6 @@
 /* ============================================
-   BMS Controller — Stylesheet
+   BMS Controller — Stylesheet v2.0
+   With Range Monitoring & Signal Strength UI
    ============================================ */
 
 :root {
@@ -17,6 +18,10 @@
   --red-glow: rgba(239, 68, 68, 0.3);
   --amber: #f59e0b;
   --amber-glow: rgba(245, 158, 11, 0.3);
+  --cyan: #06b6d4;
+  --cyan-glow: rgba(6, 182, 212, 0.3);
+  --purple: #8b5cf6;
+  --purple-glow: rgba(139, 92, 246, 0.3);
 
   --text-primary: #f1f5f9;
   --text-secondary: #94a3b8;
@@ -56,6 +61,49 @@ body {
   min-height: 100vh;
   position: relative;
   padding-bottom: 40px;
+}
+
+/* ── Range Warning Banner ── */
+.range-warning {
+  position: fixed;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  max-width: 480px;
+  width: 100%;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 20px;
+  font-size: 13px;
+  font-weight: 600;
+  animation: warningSlideDown 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.range-warning.warning-low {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.95), rgba(217, 119, 6, 0.95));
+  color: #1a1a1a;
+}
+
+.range-warning.warning-critical {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.95), rgba(185, 28, 28, 0.95));
+  color: white;
+  animation: warningSlideDown 0.4s cubic-bezier(0.4, 0, 0.2, 1), warningPulse 1.5s ease-in-out infinite;
+}
+
+.range-warning.hidden {
+  display: none !important;
+}
+
+@keyframes warningSlideDown {
+  from { transform: translateX(-50%) translateY(-100%); }
+  to { transform: translateX(-50%) translateY(0); }
+}
+
+@keyframes warningPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.8; }
 }
 
 /* ── Status Bar ── */
@@ -128,6 +176,217 @@ body {
   display: flex;
   flex-direction: column;
   gap: 24px;
+}
+
+/* ── Signal Strength Card ── */
+.signal-card {
+  background: var(--bg-card);
+  border-radius: var(--radius);
+  padding: 20px 24px;
+  border: 1px solid var(--border);
+  transition: all var(--transition);
+  position: relative;
+  overflow: hidden;
+}
+
+.signal-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--green), var(--amber), var(--red));
+  opacity: 0.6;
+  transition: opacity var(--transition);
+}
+
+.signal-card.signal-excellent::before { background: var(--green); opacity: 1; }
+.signal-card.signal-good::before { background: linear-gradient(90deg, var(--green), var(--cyan)); opacity: 1; }
+.signal-card.signal-fair::before { background: var(--amber); opacity: 1; }
+.signal-card.signal-weak::before { background: var(--red); opacity: 1; animation: signalPulse 1.5s ease-in-out infinite; }
+
+@keyframes signalPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+.signal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 16px;
+}
+
+.signal-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.2px;
+}
+
+.signal-subtitle {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-muted);
+  margin-top: 2px;
+  transition: color var(--transition);
+}
+
+.signal-subtitle.excellent { color: var(--green); }
+.signal-subtitle.good { color: var(--cyan); }
+.signal-subtitle.fair { color: var(--amber); }
+.signal-subtitle.weak { color: var(--red); }
+
+.signal-rssi {
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--text-primary);
+  letter-spacing: -0.5px;
+  font-variant-numeric: tabular-nums;
+}
+
+.signal-visual {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+/* Signal Bars */
+.signal-bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 4px;
+  height: 36px;
+}
+
+.signal-bar {
+  width: 10px;
+  border-radius: 3px 3px 1px 1px;
+  background: rgba(255, 255, 255, 0.08);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.signal-bar[data-level="1"] { height: 8px; }
+.signal-bar[data-level="2"] { height: 14px; }
+.signal-bar[data-level="3"] { height: 20px; }
+.signal-bar[data-level="4"] { height: 28px; }
+.signal-bar[data-level="5"] { height: 36px; }
+
+.signal-bar.active {
+  box-shadow: 0 0 8px var(--green-glow);
+}
+
+.signal-bar.active[data-level="1"],
+.signal-bar.active[data-level="2"],
+.signal-bar.active[data-level="3"],
+.signal-bar.active[data-level="4"],
+.signal-bar.active[data-level="5"] {
+  background: var(--green);
+}
+
+/* Color based on signal quality */
+.signal-card.signal-excellent .signal-bar.active { background: var(--green); box-shadow: 0 0 8px var(--green-glow); }
+.signal-card.signal-good .signal-bar.active { background: var(--cyan); box-shadow: 0 0 8px var(--cyan-glow); }
+.signal-card.signal-fair .signal-bar.active { background: var(--amber); box-shadow: 0 0 8px var(--amber-glow); }
+.signal-card.signal-weak .signal-bar.active { background: var(--red); box-shadow: 0 0 8px var(--red-glow); }
+
+.signal-distance {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+
+.signal-distance svg {
+  color: var(--accent);
+}
+
+/* Signal Meter */
+.signal-meter {
+  margin-bottom: 16px;
+}
+
+.signal-meter-track {
+  width: 100%;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 3px;
+  position: relative;
+  overflow: visible;
+}
+
+.signal-meter-fill {
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  border-radius: 3px;
+  background: linear-gradient(90deg, var(--green), var(--cyan), var(--amber), var(--red));
+  transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  width: 0%;
+}
+
+.signal-meter-marker {
+  position: absolute;
+  top: -5px;
+  width: 16px;
+  height: 16px;
+  background: var(--text-primary);
+  border-radius: 50%;
+  border: 3px solid var(--accent);
+  transform: translateX(-50%);
+  transition: left 0.6s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.4s ease;
+  left: 0%;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+  z-index: 2;
+}
+
+.signal-meter-labels {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 8px;
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Signal Stats Row */
+.signal-stats-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+}
+
+.signal-stat {
+  text-align: center;
+  padding: 8px 4px;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: var(--radius-sm);
+}
+
+.signal-stat-label {
+  display: block;
+  font-size: 9px;
+  font-weight: 500;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 3px;
+}
+
+.signal-stat-value {
+  display: block;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
 }
 
 /* ── Battery Card ── */
@@ -565,12 +824,22 @@ body {
   width: 100%;
   max-width: 480px;
   padding: 24px;
+  max-height: 85vh;
+  overflow-y: auto;
   animation: slideUp 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 @keyframes slideUp {
   from { transform: translateY(100%); }
   to { transform: translateY(0); }
+}
+
+.modal::-webkit-scrollbar {
+  width: 4px;
+}
+.modal::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.1);
+  border-radius: 4px;
 }
 
 .modal-header {
@@ -629,6 +898,28 @@ body {
 
 .setting-select option {
   background: var(--bg-secondary);
+}
+
+.settings-divider {
+  height: 1px;
+  background: var(--border);
+  margin: 4px 0;
+}
+
+.setting-section-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--accent);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.setting-hint {
+  font-size: 11px;
+  color: var(--text-muted);
+  line-height: 1.4;
+  margin-top: -8px;
+  padding: 0 2px;
 }
 
 /* ── Toast ── */

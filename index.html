@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <meta name="description" content="BMS Controller - Turn on/off your lithium battery BMS system via Bluetooth">
+  <meta name="description" content="BMS Controller - Turn on/off your lithium battery BMS system via Bluetooth with extended range monitoring">
   <meta name="theme-color" content="#0a0e1a">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -16,6 +16,16 @@
 </head>
 <body>
   <div class="app">
+    <!-- Range Warning Banner -->
+    <div class="range-warning hidden" id="rangeWarning">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+        <line x1="12" y1="9" x2="12" y2="13"/>
+        <line x1="12" y1="17" x2="12.01" y2="17"/>
+      </svg>
+      <span id="rangeWarningText">Signal weak — move closer to BMS</span>
+    </div>
+
     <!-- Status Bar -->
     <header class="status-bar">
       <div class="status-indicator" id="bleStatus">
@@ -33,6 +43,63 @@
 
     <!-- Main Content -->
     <main class="main-content">
+
+      <!-- Signal Strength Card -->
+      <div class="signal-card hidden" id="signalCard">
+        <div class="signal-header">
+          <div class="signal-info">
+            <div class="signal-title">Signal Range</div>
+            <div class="signal-subtitle" id="signalQuality">No signal</div>
+          </div>
+          <div class="signal-rssi" id="rssiValue">-- dBm</div>
+        </div>
+        <div class="signal-visual">
+          <div class="signal-bars" id="signalBars">
+            <div class="signal-bar" data-level="1"></div>
+            <div class="signal-bar" data-level="2"></div>
+            <div class="signal-bar" data-level="3"></div>
+            <div class="signal-bar" data-level="4"></div>
+            <div class="signal-bar" data-level="5"></div>
+          </div>
+          <div class="signal-distance">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+              <circle cx="12" cy="10" r="3"/>
+            </svg>
+            <span id="distanceValue">-- m</span>
+          </div>
+        </div>
+        <div class="signal-meter">
+          <div class="signal-meter-track">
+            <div class="signal-meter-fill" id="signalMeterFill"></div>
+            <div class="signal-meter-marker" id="signalMeterMarker"></div>
+          </div>
+          <div class="signal-meter-labels">
+            <span>Close</span>
+            <span>Medium</span>
+            <span>Far</span>
+          </div>
+        </div>
+        <div class="signal-stats-row">
+          <div class="signal-stat">
+            <span class="signal-stat-label">Min RSSI</span>
+            <span class="signal-stat-value" id="rssiMin">--</span>
+          </div>
+          <div class="signal-stat">
+            <span class="signal-stat-label">Max RSSI</span>
+            <span class="signal-stat-value" id="rssiMax">--</span>
+          </div>
+          <div class="signal-stat">
+            <span class="signal-stat-label">Avg RSSI</span>
+            <span class="signal-stat-value" id="rssiAvg">--</span>
+          </div>
+          <div class="signal-stat">
+            <span class="signal-stat-label">Stability</span>
+            <span class="signal-stat-value" id="signalStability">--</span>
+          </div>
+        </div>
+      </div>
+
       <!-- Battery Visual -->
       <div class="battery-card">
         <div class="battery-visual">
@@ -181,6 +248,51 @@
             <label class="setting-label">Poll Interval (seconds)</label>
             <input type="number" class="setting-input" id="pollInterval" value="2" min="1" max="30">
           </div>
+
+          <!-- Range Optimization Settings -->
+          <div class="settings-divider"></div>
+          <div class="setting-section-title">Range Optimization</div>
+
+          <div class="setting-group">
+            <label class="setting-label">Signal Monitor</label>
+            <label class="mini-toggle">
+              <input type="checkbox" id="signalMonitorToggle" checked>
+              <span class="mini-slider"><span class="mini-knob"></span></span>
+            </label>
+          </div>
+          <div class="setting-group">
+            <label class="setting-label">Range Warning Alerts</label>
+            <label class="mini-toggle">
+              <input type="checkbox" id="rangeAlertToggle" checked>
+              <span class="mini-slider"><span class="mini-knob"></span></span>
+            </label>
+          </div>
+          <div class="setting-group">
+            <label class="setting-label">Vibrate on Weak Signal</label>
+            <label class="mini-toggle">
+              <input type="checkbox" id="vibrateToggle" checked>
+              <span class="mini-slider"><span class="mini-knob"></span></span>
+            </label>
+          </div>
+          <div class="setting-group">
+            <label class="setting-label">Keep-Alive Ping (seconds)</label>
+            <input type="number" class="setting-input" id="keepAliveInterval" value="5" min="1" max="30">
+          </div>
+          <div class="setting-group">
+            <label class="setting-label">RSSI Read Interval (ms)</label>
+            <input type="number" class="setting-input" id="rssiInterval" value="1000" min="500" max="5000" step="100">
+          </div>
+          <div class="setting-group">
+            <label class="setting-label">TX Power Hint (dBm)</label>
+            <select class="setting-select" id="txPowerSelect">
+              <option value="-59">Default (-59 dBm)</option>
+              <option value="-40">High Power (-40 dBm)</option>
+              <option value="-50">Medium (-50 dBm)</option>
+              <option value="-65">Low Power (-65 dBm)</option>
+              <option value="-75">Very Low (-75 dBm)</option>
+            </select>
+          </div>
+          <div class="setting-hint">TX Power affects distance estimation accuracy. Match it to your BMS module's broadcast power for better results.</div>
         </div>
       </div>
     </div>
